@@ -1,5 +1,4 @@
 #include <stdio.h>
-
 #include "host_messaging.h"
 
 /** @brief Read len bytes from UART, acknowledging after every 256 bytes.
@@ -8,7 +7,7 @@
  *  @param len The number of bytes to be read.
  * 
  *  @return 0 on success. A negative value on error.
- */
+*/
 int read_bytes(void *buf, uint16_t len) {
     int result;
     int i;
@@ -30,7 +29,7 @@ int read_bytes(void *buf, uint16_t len) {
 /** @brief Read a msg header from UART.
  * 
  *  @param hdr Pointer to a buffer where the incoming bytes should be stored.
- */
+*/
 void read_header(msg_header_t *hdr) {
     hdr->magic = uart_readbyte();
     // Any bytes until '%' will be read, but ignored.
@@ -45,7 +44,7 @@ void read_header(msg_header_t *hdr) {
 /** @brief Receive an ACK from UART.
  * 
  *  @return 0 on success. A negative value on error.
- */
+*/
 uint8_t read_ack() {
     msg_header_t ack_buf = {0};
 
@@ -65,7 +64,7 @@ uint8_t read_ack() {
  *                    debug and ACK messages.
  * 
  *  @return 0 on success. A negative value on error.
- */
+*/
 int write_bytes(const void *buf, uint16_t len, bool should_ack) {
     for (int i = 0; i < len; i++) {
         if (i % 256 == 0 && i != 0) {  // Expect an ACK after sending every 256 bytes
@@ -88,7 +87,7 @@ int write_bytes(const void *buf, uint16_t len, bool should_ack) {
  *  @param len The number of bytes to print.
  * 
  *  @return 0 on success. A negative value on error.
- */
+*/
 int write_hex(msg_type_t type, const void *buf, size_t len) {
     msg_header_t hdr;
     int i;
@@ -123,7 +122,7 @@ int write_hex(msg_type_t type, const void *buf, size_t len) {
  *  @param len The size of the outgoing packet in bytes.
  * 
  *  @return 0 on success. A negative value on failure.
- */
+*/
 int write_packet(msg_type_t type, const void *buf, uint16_t len) {
     msg_header_t hdr;
     int result;
@@ -160,7 +159,7 @@ int write_packet(msg_type_t type, const void *buf, uint16_t len) {
  *  @param len A pointer to the resulting length of the packet. Can be null.
  * 
  *  @return 0 on success, a negative number on failure
- */
+*/
 int read_packet(msg_type_t* cmd, void *buf, uint16_t *len) {
     msg_header_t header = {0};
 
