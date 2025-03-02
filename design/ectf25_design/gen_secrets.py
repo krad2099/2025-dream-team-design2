@@ -11,7 +11,7 @@ def gen_secrets(channels: list[int]) -> bytes:
     # Hashing channels and adding salt for extra security
     salt = b"deployment_salt"
     kdf = PBKDF2HMAC(
-        algorithm=hashes.SHA256(),
+        algorithm=hash.SHA256(),
         length=32,
         salt=salt,
         iterations=100000,
