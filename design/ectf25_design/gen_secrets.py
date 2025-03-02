@@ -1,26 +1,29 @@
 import argparse
 import json
 from pathlib import Path
-
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.backends import default_backend
 from loguru import logger
 
 
 def gen_secrets(channels: list[int]) -> bytes:
-    """Generate the contents of the secrets file
-
-    :param channels: List of channel numbers
-    :returns: Contents of the secrets file as bytes
-    """
-    # TODO: Include any additional cryptographic material or configuration data
-    # in the secrets file for use in the encoder/decoder, ensuring proper handling 
-    # of cryptographic material, keys, or other sensitive data.
-
+    """Generate the contents secrets file"""
+    # Hashing channels and adding salt for extra security
+    salt = b"deployment_salt"
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=100000,
+        backend=default_backend()
+    )
+    secret_channels = kdf.derive(str(channels).encode())
+    
     secrets = {
         "channels": channels,
-        "some_secrets": "EXAMPLE",  # Replace with actual secret generation process
+        "some_secrets": secret_channels.hex()  # Encoding the hashed value securely
     }
 
-    # Return the secrets as a JSON-encoded byte string
     return json.dumps(secrets).encode()
 
 
@@ -53,7 +56,6 @@ def parse_args():
 
 def main():
     """Main function of gen_secrets
-
     You will likely not have to change this function
     """
     # Parse the command line arguments
