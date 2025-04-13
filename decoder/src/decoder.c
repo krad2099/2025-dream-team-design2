@@ -21,6 +21,21 @@
 #define DEFAULT_CHANNEL_TIMESTAMP 0xFFFFFFFFFFFFFFFF
 #define FLASH_FIRST_BOOT 0xDEADBEEF
 
+// Define a subscription structure if not already defined.
+typedef struct {
+    uint32_t id;
+    int active;
+} subscription_t;
+
+// Define the decoder status structure.
+typedef struct {
+    subscription_t subscribed_channels[MAX_CHANNEL_COUNT];
+} decoder_status_t;
+
+// Declare a global instance of the decoder status.
+decoder_status_t decoder_status;
+
+
 static timestamp_t last_timestamp = 0;
 
 // Placeholder decryption key.
