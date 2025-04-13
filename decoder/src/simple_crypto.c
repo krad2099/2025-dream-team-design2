@@ -4,19 +4,18 @@
 #include <stdint.h>
 #include <string.h>
 
-
 int encrypt_sym(uint8_t *plaintext, size_t len, uint8_t *key, uint8_t *ciphertext) {
     Aes ctx; 
     int result;
 
-    if (len <= 0 || len % BLOCK_SIZE)
-        return -1;
+    if (len == 0 || len % BLOCK_SIZE != 0)
+        return -1;  // Require nonzero data length and a multiple of the block size
 
-    result = wc_AesSetKey(&ctx, key, 16, NULL, AES_ENCRYPTION);
+    result = wc_AesSetKey(&ctx, key, KEY_SIZE, NULL, AES_ENCRYPTION);
     if (result != 0)
         return result; 
 
-    for (int i = 0; i < len - 1; i += BLOCK_SIZE) {
+    for (int i = 0; i < len; i += BLOCK_SIZE) {
         result = wc_AesEncryptDirect(&ctx, ciphertext + i, plaintext + i);
         if (result != 0)
             return result; 
@@ -28,14 +27,14 @@ int decrypt_sym(uint8_t *ciphertext, size_t len, uint8_t *key, uint8_t *plaintex
     Aes ctx; 
     int result; 
 
-    if (len <= 0 || len % BLOCK_SIZE)
-        return -1;
+    if (len == 0 || len % BLOCK_SIZE != 0)
+        return -1; 
 
-    result = wc_AesSetKey(&ctx, key, 16, NULL, AES_DECRYPTION);
+    result = wc_AesSetKey(&ctx, key, KEY_SIZE, NULL, AES_DECRYPTION);
     if (result != 0)
         return result; 
 
-    for (int i = 0; i < len - 1; i += BLOCK_SIZE) {
+    for (int i = 0; i < len; i += BLOCK_SIZE) {
         result = wc_AesDecryptDirect(&ctx, plaintext + i, ciphertext + i);
         if (result != 0)
             return result; 
