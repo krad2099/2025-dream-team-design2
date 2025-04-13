@@ -8,6 +8,7 @@
 #include "simple_flash.h"
 #include "host_messaging.h"
 #include "simple_uart.h"
+#include "simple_crypto.h"
 
 #define timestamp_t uint64_t
 #define channel_id_t uint32_t
@@ -22,12 +23,31 @@
 
 static timestamp_t last_timestamp = 0;
 
+// Placeholder decryption key.
+// In practice, the key should be securely derived (e.g. from a secrets file) 
+// in the same way as encoder.py computes it.
+static const uint8_t decryption_key[KEY_SIZE] = {
+    0x00, 0x01, 0x02, 0x03,
+    0x04, 0x05, 0x06, 0x07,
+    0x08, 0x09, 0x0A, 0x0B,
+    0x0C, 0x0D, 0x0E, 0x0F
+};
+
+// Assume that frame_packet_t is defined similarly to how encoder.py packs its header;
+// for example:
+typedef struct {
+    channel_id_t channel;
+    timestamp_t timestamp;
+    uint8_t data[];  // Encrypted payload follows
+} frame_packet_t;
+
 int is_subscribed(channel_id_t channel) {
     if (channel == EMERGENCY_CHANNEL) {
         return 1;
     }
     for (int i = 0; i < MAX_CHANNEL_COUNT; i++) {
-        if (decoder_status.subscribed_channels[i].id == channel && decoder_status.subscribed_channels[i].active) {
+        if (decoder_status.subscribed_channels[i].id == channel &&
+            decoder_status.subscribed_channels[i].active) {
             return 1;
         }
     }
@@ -35,13 +55,29 @@ int is_subscribed(channel_id_t channel) {
 }
 
 int decode(pkt_len_t pkt_len, frame_packet_t *new_frame) {
+    // Check that the timestamp of the new frame is in order.
     if (new_frame->timestamp <= last_timestamp) {
         return -1;
     }
     last_timestamp = new_frame->timestamp;
 
     if (is_subscribed(new_frame->channel)) {
-        write_packet(DECODE_MSG, new_frame->data, pkt_len - sizeof(frame_packet_t));
+        // Calculate the length of the encrypted payload.
+        // This assumes that pkt_len includes the header and the encrypted data,
+        // and that the payload length is a multiple of BLOCK_SIZE.
+        size_t enc_data_len = pkt_len - sizeof(frame_packet_t);
+
+        // Allocate a buffer for the decrypted data.
+        uint8_t decrypted_data[enc_data_len];
+
+        // Decrypt the encrypted payload.
+        int ret = decrypt_sym(new_frame->data, enc_data_len, (uint8_t *)decryption_key, decrypted_data);
+        if (ret != 0) {
+            STATUS_LED_RED();
+            return -1;
+        }
+        // Now forward the decrypted payload.
+        write_packet(DECODE_MSG, decrypted_data, enc_data_len);
         return 0;
     } else {
         STATUS_LED_RED();
