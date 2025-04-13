@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
 from loguru import logger
 
 
@@ -11,7 +12,7 @@ def gen_secrets(channels: list[int]) -> bytes:
     # Hashing channels and adding salt for extra security
     salt = b"deployment_salt"
     kdf = PBKDF2HMAC(
-        algorithm=hash.SHA256(),
+        algorithm=hashes.SHA256(),
         length=32,
         salt=salt,
         iterations=100000,
