@@ -40,3 +40,4 @@ ENTRY=firmware_startup
 
 # Enable Crypto Example
 CRYPTO_EXAMPLE=1
+
